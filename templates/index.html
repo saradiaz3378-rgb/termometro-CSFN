@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Termómetro ESP32</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background: #0f1117;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 { color: #00d4ff; font-size: 2em; }
+    #temp-actual {
+      font-size: 4em;
+      color: #ff4444;
+      margin: 20px;
+      font-weight: bold;
+    }
+    canvas {
+      max-width: 800px;
+      margin: 0 auto;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌡️ Termómetro en Tiempo Real</h1>
+  <div id="temp-actual">-- °C</div>
+  <canvas id="grafica"></canvas>
+
+  <script>
+    const ctx = document.getElementById('grafica').getContext('2d');
+    const grafica = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Temperatura (°C)',
+          data: [],
+          borderColor: '#00d4ff',
+          backgroundColor: 'rgba(0,212,255,0.1)',
+          borderWidth: 2,
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      options: {
+        animation: false,
+        scales: {
+          y: {
+            min: 0, max: 50,
+            ticks: { color: 'white' },
+            grid: { color: '#333' }
+          },
+          x: {
+            ticks: { color: 'white' },
+            grid: { color: '#333' }
+          }
+        },
+        plugins: {
+          legend: { labels: { color: 'white' } }
+        }
+      }
+    });
+
+    let contador = 0;
+    setInterval(() => {
+      fetch('/datos')
+        .then(r => r.json())
+        .then(datos => {
+          if (datos.length > 0) {
+            document.getElementById('temp-actual').innerText =
+              datos[datos.length-1].toFixed(1) + ' °C';
+            grafica.data.labels = datos.map((_, i) => i + 1);
+            grafica.data.datasets[0].data = datos;
+            grafica.update();
+          }
+        });
+    }, 2000);
+  </script>
+</body>
+</html>
